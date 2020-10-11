@@ -24,6 +24,9 @@ def create_index():
             "properties": {
                 "vector": {
                     "type": "dense_vector", "dims" : 512 
+                },
+                  "title": {
+                    "type": "text"
                 }
             }
         }
@@ -50,17 +53,27 @@ def index_batch(docs):
         requests.append(request)
     bulk(client, requests)
 
+title=None
+abstract=None
 create_index()
 for prefix, the_type, value in ijson.parse(open('df_json_small_tfidf.json')):
     if(prefix == 'item.abstract'):
-      body = {
-          "vector": eval(value)}
-      docs.append(body)
-      count += 1 
-      if count % 100 == 0:
-        index_batch(docs)
-        docs = []
-        print("Indexed {} documents.".format(count))
+        abstract=eval(value)
+    if(prefix == 'item.title'):
+        title=value   
+    if(title and abstract):
+
+        body = {
+        "vector": eval(value),
+        "title":title}
+        docs.append(body)
+        title=None
+        abstract=None
+        count += 1 
+        if count % 100 == 0:
+            index_batch(docs)
+            docs = []
+            print("Indexed {} documents.".format(count))
 
 if docs:
     index_batch(docs)
