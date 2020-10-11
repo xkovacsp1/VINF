@@ -22,10 +22,43 @@ def create_index():
             "enabled": "true"
             },
             "properties": {
-                "vector": {
+                "abstract": {
                     "type": "dense_vector", "dims" : 512 
                 },
                   "title": {
+                    "type": "text"
+                },
+                  "submitter": {
+                    "type": "text"
+                },
+                  "journal_ref": {
+                    "type": "text"
+                },
+                  "doi": {
+                    "type": "text"
+                },
+                  "report_no": {
+                    "type": "text"
+                },
+                  "categories": {
+                    "type": "text"
+                },
+                  "license": {
+                    "type": "text"
+                },
+                  "pages": {
+                    "type": "text"
+                },
+                  "figures": {
+                    "type": "text"
+                },
+                  "latest_version_date": {
+                    "type": "text"
+                },
+                  "latest_version": {
+                    "type": "text"
+                },
+                  "list_of_authors": {
                     "type": "text"
                 }
             }
@@ -53,22 +86,85 @@ def index_batch(docs):
         requests.append(request)
     bulk(client, requests)
 
+submitter=None
 title=None
+journal_ref=None
+doi=None
+report_no=None
+categories=None
+license=None
 abstract=None
+pages=None
+figures=None
+latest_version_date=None
+latest_version=None
+list_of_authors=None
+
 create_index()
 for prefix, the_type, value in ijson.parse(open('df_json_small_tfidf.json')):
-    if(prefix == 'item.abstract'):
-        abstract=eval(value)
+
+    if(prefix == 'item.submitter'):
+        submitter=value      
     if(prefix == 'item.title'):
         title=value   
-    if(title and abstract):
-
+    if(prefix == 'item.journal-ref'):
+       journal_ref=value
+    if(prefix == 'item.doi'):
+        doi=value   
+    if(prefix == 'item.report-no'):
+        report_no=value
+    if(prefix == 'item.categories'):
+        categories=eval(value)
+    if(prefix == 'item.license'):
+        license=value
+    if(prefix == 'item.abstract'):
+        abstract=eval(value)
+    if(prefix == 'item.pages'):
+        if(value):
+            pages=int(value)
+        else:
+            pages='No data'
+    if(prefix == 'item.figures'):
+        if(value):
+            figures=int(value)
+        else:
+            figures='No data'
+    if(prefix == 'item.latest_version_date'):
+        latest_version_date=value
+    if(prefix == 'item.latest_version'):
+        latest_version=value
+    if(prefix == 'item.list_of_authors'):
+        list_of_authors=eval(value)       
+    if(submitter and title and journal_ref  and doi and report_no and categories and license and abstract and pages and  figures and latest_version_date and latest_version and list_of_authors):
         body = {
-        "vector": eval(value),
-        "title":title}
+        "submitter":submitter,
+        "title":title,
+        "journal_ref":journal_ref,
+        "doi":doi,
+        "report_no":report_no,
+        "categories":categories, # mozno sem dat eval
+        "license":license,
+        "abstract": abstract,
+        "pages":pages,
+        "figures":figures,
+        "latest_version_date":latest_version_date,
+        "latest_version":latest_version,
+        "list_of_authors":list_of_authors # mozno sem dat eval
+        }
         docs.append(body)
+        submitter=None
         title=None
+        journal_ref=None
+        doi=None
+        report_no=None
+        categories=None
+        license=None
         abstract=None
+        pages=None
+        figures=None
+        latest_version_date=None
+        latest_version=None
+        list_of_authors=None
         count += 1 
         if count % 100 == 0:
             index_batch(docs)
