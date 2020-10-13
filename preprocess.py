@@ -1,4 +1,8 @@
 import ijson
+import json
+import re
+docs = []
+count = 0
 
 id=None
 submitter=None
@@ -21,7 +25,18 @@ latest_version=None
 list_of_authors=None
 
 
-for prefix, the_type, value in ijson.parse(open('papers.json')):
+def append_to_json(_dict,path): 
+    with open(path, 'ab+') as f:
+        f.seek(0,2)                                #Go to the end of file    
+        if f.tell() == 0 :                         #Check if file is empty
+            f.write(json.dumps(_dict).encode())  #If empty, write an array
+        else :
+            pos=f.seek(-1,2)           
+            f.truncate()                           #Remove the last character, open the array
+            f.write(' , '.encode())                #Write the separator
+            f.write(json.dumps(_dict).encode()[1:]) # Write after from [ character
+      
+for prefix, the_type, value in ijson.parse(open('res.json')):
     if(prefix == 'item.id'):
         id=value
     if(prefix == 'item.submitter'):
@@ -51,7 +66,7 @@ for prefix, the_type, value in ijson.parse(open('papers.json')):
     if(prefix == 'item.authors_parsed'):
         authors_parsed=value
     if(id and submitter and  authors and title  and comments and journal_ref  and doi and report_no and categories and license and abstract  and versions and update_date and authors_parsed):
-        print('som') #and pages and  figures and latest_version_date and latest_version and list_of_authors):
+         #and pages and  figures and latest_version_date and latest_version and list_of_authors):
         body = {
         "id":id,
         "submitter":submitter,
@@ -73,6 +88,7 @@ for prefix, the_type, value in ijson.parse(open('papers.json')):
         #"latest_version":latest_version,
         #"list_of_authors":list_of_authors # mozno sem dat eval
         }
+        docs.append(body)
         id=None
         submitter=None
         authors=None
@@ -92,3 +108,17 @@ for prefix, the_type, value in ijson.parse(open('papers.json')):
         latest_version_date=None
         latest_version=None
         list_of_authors=None
+
+        count += 1 
+        if count % 10000 == 0:
+            append_to_json(docs,'res.json')
+            docs = []
+            print("saved {} documents.".format(count))
+
+
+if docs:
+   append_to_json(docs,'res.json')
+   docs = []
+   print("saved {} documents.".format(count))
+   
+             
