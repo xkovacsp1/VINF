@@ -101,7 +101,7 @@ latest_version=None
 list_of_authors=None
 
 create_index()
-for prefix, the_type, value in ijson.parse(open('df_json_small_tfidf.json')):
+for prefix, the_type, value in ijson.parse(open('res.json')):
 
     if(prefix == 'item.submitter'):
         submitter=value      
@@ -142,14 +142,14 @@ for prefix, the_type, value in ijson.parse(open('df_json_small_tfidf.json')):
         "journal_ref":journal_ref,
         "doi":doi,
         "report_no":report_no,
-        "categories":categories, # mozno sem dat eval
+        "categories":categories, 
         "license":license,
         "abstract": abstract,
         "pages":pages,
         "figures":figures,
         "latest_version_date":latest_version_date,
         "latest_version":latest_version,
-        "list_of_authors":list_of_authors # mozno sem dat eval
+        "list_of_authors":list_of_authors 
         }
         docs.append(body)
         submitter=None

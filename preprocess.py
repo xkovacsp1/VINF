@@ -108,7 +108,7 @@ def get_list_of_authors(authors):
     return str(list(map(str.strip, res)))
 
 
-for prefix, the_type, value in ijson.parse(open('papers.json')):
+for prefix, the_type, value in ijson.parse(open('papers_medium.json')):
     #beginning of new paper 
     if(prefix == 'item.id'):
         id = value
@@ -123,7 +123,6 @@ for prefix, the_type, value in ijson.parse(open('papers.json')):
         if(prefix == 'item.comments'):
             pages = get_page_number(value)
             figures = get_figure_number(value)
-            # comments=value
         if(prefix == 'item.journal-ref'):
             journal_ref = value
         if(prefix == 'item.doi'):
@@ -144,34 +143,27 @@ for prefix, the_type, value in ijson.parse(open('papers.json')):
             abstract = remove_stopwords(abstract)
             abstract = model([abstract])           # google sentence encoder
             abstract = format_sentence_encoder_result_to_array(abstract)
-            # abstract=value
         if(prefix == 'item.versions'):
             latest_version_date = get_version_date(value)
             latest_version = get_version_number(value)
-            # versions=value
         if(prefix == 'item.update_date'):
             update_date = value
         if(prefix == 'item.authors_parsed'):
             list_of_authors = get_list_of_authors(value)
-            # list_of_authors=value
         if(id and submitter and title and journal_ref and doi and report_no and categories and license and abstract and update_date
         and pages and figures and latest_version_date and latest_version and list_of_authors):
 
             body = {
                 "id": id,
                 "submitter": submitter,
-                # "authors":authors,
                 "title": title,
-                # "comments":comments,
                 "journal_ref": journal_ref,
                 "doi": doi,
                 "report_no": report_no,
-                "categories": categories,  # mozno sem dat eval
+                "categories": categories, 
                 "license": license,
                 "abstract": abstract,
-                # "versions":versions,
                 "update_date": update_date,
-                # "authors_parsed":authors_parsed,
                 "pages": pages,
                 "figures": figures,
                 "latest_version_date": latest_version_date,
@@ -180,18 +172,14 @@ for prefix, the_type, value in ijson.parse(open('papers.json')):
             }
             id = None
             submitter = None
-            # authors=None
             title = None
-            # comments=None
             journal_ref = None
             doi = None
             report_no = None
             categories = None
             license = None
             abstract = None
-            # versions=None
             update_date = None
-            # authors_parsed=None
             pages = None
             figures = None
             latest_version_date = None
