@@ -101,17 +101,17 @@ latest_version=None
 list_of_authors=None
 
 create_index()
-for prefix, the_type, value in ijson.parse(open('res.json')):
+for prefix, the_type, value in ijson.parse(open('res_medium.json')):
 
     if(prefix == 'item.submitter'):
         submitter=value      
     if(prefix == 'item.title'):
         title=value   
-    if(prefix == 'item.journal-ref'):
+    if(prefix == 'item.journal_ref'):
        journal_ref=value
     if(prefix == 'item.doi'):
         doi=value   
-    if(prefix == 'item.report-no'):
+    if(prefix == 'item.report_no'):
         report_no=value
     if(prefix == 'item.categories'):
         categories=eval(value)
@@ -120,15 +120,15 @@ for prefix, the_type, value in ijson.parse(open('res.json')):
     if(prefix == 'item.abstract'):
         abstract=eval(value)
     if(prefix == 'item.pages'):
-        if(value):
+        if(value!='No data'):
             pages=int(value)
         else:
-            pages='No data'
+            pages=value
     if(prefix == 'item.figures'):
-        if(value):
+        if(value != 'No data'):
             figures=int(value)
         else:
-            figures='No data'
+            figures=value
     if(prefix == 'item.latest_version_date'):
         latest_version_date=value
     if(prefix == 'item.latest_version'):
