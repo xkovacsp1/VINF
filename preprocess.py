@@ -12,30 +12,11 @@ stop_words = set(stopwords.words('english'))
 
 docs = []
 count = 0
-remove=False
+remove = False
 module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
 model = hub.load(module_url)
 print("module %s loaded" % module_url)
 
-id = None
-submitter = None
-authors = None
-title = None
-comments = None
-journal_ref = None
-doi = None
-report_no = None
-categories = None
-license = None
-abstract = None
-versions = None
-update_date = None
-authors_parsed = None
-pages = None
-figures = None
-latest_version_date = None
-latest_version = None
-list_of_authors = None
 
 def remove_stopwords(text):
     no_stopword_text = [w for w in text.split() if not w in stop_words]
@@ -108,91 +89,46 @@ def get_list_of_authors(authors):
     return str(list(map(str.strip, res)))
 
 
-for prefix, the_type, value in ijson.parse(open('papers_medium.json')):
-    #beginning of new paper 
-    if(prefix == 'item.id'):
-        id = value
-        remove = False
-    if(remove == False):
-        if(prefix == 'item.submitter'):
-            submitter = value
-        if(prefix == 'item.authors'):
-            authors = value
-        if(prefix == 'item.title'):
-            title = value
-        if(prefix == 'item.comments'):
-            pages = get_page_number(value)
-            figures = get_figure_number(value)
-        if(prefix == 'item.journal-ref'):
-            journal_ref = value
-        if(prefix == 'item.doi'):
-            doi = value
-        if(prefix == 'item.report-no'):
-            report_no = value
-        if(prefix == 'item.categories'):
-            categories = categories_to_list_of_strings(value)
-        if(prefix == 'item.license'):
-            license = value
-        if(prefix == 'item.abstract'):
-            # filter out not accepted papers
-            if(bool(re.search('[pP]aper.*[wW]ithdrawn|^[Ww]ithdrawn', value))):
-                remove = True
-                continue
-            # vectorize abstract
-            abstract = clean_text(value)
-            abstract = remove_stopwords(abstract)
-            abstract = model([abstract])           # google sentence encoder
-            abstract = format_sentence_encoder_result_to_array(abstract)
-        if(prefix == 'item.versions'):
-            latest_version_date = get_version_date(value)
-            latest_version = get_version_number(value)
-        if(prefix == 'item.update_date'):
-            update_date = value
-        if(prefix == 'item.authors_parsed'):
-            list_of_authors = get_list_of_authors(value)
-        if(id and submitter and title and journal_ref and doi and report_no and categories and license and abstract and update_date
-        and pages and figures and latest_version_date and latest_version and list_of_authors):
+with open('papers.json', 'rb') as data:
+    for obj in ijson.items(data, 'item'):
+        # filter out not accepted papers
+        if(bool(re.search('[pP]aper.*[wW]ithdrawn|^[Ww]ithdrawn', obj['abstract']))):
+            continue
+         # vectorize abstract
+        abstract = clean_text(obj['abstract'])
+        abstract = remove_stopwords(abstract)
+        abstract = model([abstract])           # google sentence encoder
+        abstract = format_sentence_encoder_result_to_array(abstract)
+        pages = get_page_number(obj['comments'])
+        figures = get_figure_number(obj['comments'])
+        categories = categories_to_list_of_strings(obj['categories'])
+        latest_version_date = get_version_date(obj['versions'])
+        latest_version = get_version_number(obj['versions'])
+        list_of_authors = get_list_of_authors(obj['authors_parsed'])
 
-            body = {
-                "id": id,
-                "submitter": submitter,
-                "title": title,
-                "journal_ref": journal_ref,
-                "doi": doi,
-                "report_no": report_no,
-                "categories": categories, 
-                "license": license,
-                "abstract": abstract,
-                "update_date": update_date,
-                "pages": pages,
-                "figures": figures,
-                "latest_version_date": latest_version_date,
-                "latest_version": latest_version,
-                "list_of_authors": list_of_authors
-            }
-            id = None
-            submitter = None
-            title = None
-            journal_ref = None
-            doi = None
-            report_no = None
-            categories = None
-            license = None
-            abstract = None
-            update_date = None
-            pages = None
-            figures = None
-            latest_version_date = None
-            latest_version = None
-            list_of_authors = None
-            docs.append(body)
-
-            count += 1
-            if count % 1 == 0:
-                append_to_json(docs, 'res.json')
-                docs = []
-                print("saved {} documents.".format(count))
-
+        body = {
+            "id": obj['id'],
+            "submitter": obj['submitter'],
+            "title": obj['title'],
+            "journal_ref": obj['journal-ref'],
+            "doi": obj['doi'],
+            "report_no": obj['report-no'],
+            "categories": categories,
+            "license": obj['license'],
+            "abstract": abstract,
+            "update_date": obj['update_date'],
+            "pages": pages,
+            "figures": figures,
+            "latest_version_date": latest_version_date,
+            "latest_version": latest_version,
+            "list_of_authors": list_of_authors
+        }
+        docs.append(body)
+        count += 1
+        if count % 100 == 0:
+            append_to_json(docs, 'res.json')
+            docs = []
+            print("saved {} documents.".format(count))
 
 if docs:
     append_to_json(docs, 'res.json')

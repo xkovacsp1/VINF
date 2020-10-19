@@ -1,11 +1,12 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 import ijson
-INDEX_NAME='papers'
+INDEX_NAME = 'papers'
 client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
 es = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
 docs = []
 count = 0
+
 
 def create_index():
     """ Creates an Elasticsearch index."""
@@ -19,46 +20,46 @@ def create_index():
         "mappings": {
             "dynamic": "true",
             "_source": {
-            "enabled": "true"
+                "enabled": "true"
             },
             "properties": {
                 "abstract": {
-                    "type": "dense_vector", "dims" : 512 
+                    "type": "dense_vector", "dims": 512
                 },
-                  "title": {
+                "title": {
                     "type": "text"
                 },
-                  "submitter": {
+                "submitter": {
                     "type": "text"
                 },
-                  "journal_ref": {
+                "journal_ref": {
                     "type": "text"
                 },
-                  "doi": {
+                "doi": {
                     "type": "text"
                 },
-                  "report_no": {
+                "report_no": {
                     "type": "text"
                 },
-                  "categories": {
+                "categories": {
                     "type": "text"
                 },
-                  "license": {
+                "license": {
                     "type": "text"
                 },
-                  "pages": {
+                "pages": {
                     "type": "text"
                 },
-                  "figures": {
+                "figures": {
                     "type": "text"
                 },
-                  "latest_version_date": {
+                "latest_version_date": {
                     "type": "text"
                 },
-                  "latest_version": {
+                "latest_version": {
                     "type": "text"
                 },
-                  "list_of_authors": {
+                "list_of_authors": {
                     "type": "text"
                 }
             }
@@ -77,6 +78,7 @@ def create_index():
         return is_created
     return is_created
 
+
 def index_batch(docs):
     requests = []
     for i, doc in enumerate(docs):
@@ -86,91 +88,43 @@ def index_batch(docs):
         requests.append(request)
     bulk(client, requests)
 
-submitter=None
-title=None
-journal_ref=None
-doi=None
-report_no=None
-categories=None
-license=None
-abstract=None
-pages=None
-figures=None
-latest_version_date=None
-latest_version=None
-list_of_authors=None
 
 create_index()
-for prefix, the_type, value in ijson.parse(open('res_medium.json')):
 
-    if(prefix == 'item.submitter'):
-        submitter=value      
-    if(prefix == 'item.title'):
-        title=value   
-    if(prefix == 'item.journal_ref'):
-       journal_ref=value
-    if(prefix == 'item.doi'):
-        doi=value   
-    if(prefix == 'item.report_no'):
-        report_no=value
-    if(prefix == 'item.categories'):
-        categories=eval(value)
-    if(prefix == 'item.license'):
-        license=value
-    if(prefix == 'item.abstract'):
-        abstract=eval(value)
-    if(prefix == 'item.pages'):
-        if(value!='No data'):
-            pages=int(value)
+with open('res_medium.json', 'rb') as data:
+    for obj in ijson.items(data, 'item'):
+        if(obj['pages'] != 'No data'):
+            pages = int(obj['pages'])
         else:
-            pages=value
-    if(prefix == 'item.figures'):
-        if(value != 'No data'):
-            figures=int(value)
+            pages = obj['pages']
+        if(obj['figures'] != 'No data'):
+            figures = int(obj['figures'])
         else:
-            figures=value
-    if(prefix == 'item.latest_version_date'):
-        latest_version_date=value
-    if(prefix == 'item.latest_version'):
-        latest_version=value
-    if(prefix == 'item.list_of_authors'):
-        list_of_authors=eval(value)       
-    if(submitter and title and journal_ref  and doi and report_no and categories and license and abstract and pages and  figures and latest_version_date and latest_version and list_of_authors):
+            figures = obj['figures']
+        categories = eval(obj['categories'])
+        abstract = eval(obj['abstract'])
+        list_of_authors = eval(obj['list_of_authors'])
         body = {
-        "submitter":submitter,
-        "title":title,
-        "journal_ref":journal_ref,
-        "doi":doi,
-        "report_no":report_no,
-        "categories":categories, 
-        "license":license,
-        "abstract": abstract,
-        "pages":pages,
-        "figures":figures,
-        "latest_version_date":latest_version_date,
-        "latest_version":latest_version,
-        "list_of_authors":list_of_authors 
+            "submitter": obj['submitter'],
+            "title": obj['title'],
+            "journal_ref": obj['journal_ref'],
+            "doi": obj['doi'],
+            "report_no": obj['report_no'],
+            "categories": categories,
+            "license": obj['license'],
+            "abstract": abstract,
+            "pages": pages,
+            "figures": figures,
+            "latest_version_date": obj['latest_version_date'],
+            "latest_version": obj['latest_version'],
+            "list_of_authors": list_of_authors
         }
         docs.append(body)
-        submitter=None
-        title=None
-        journal_ref=None
-        doi=None
-        report_no=None
-        categories=None
-        license=None
-        abstract=None
-        pages=None
-        figures=None
-        latest_version_date=None
-        latest_version=None
-        list_of_authors=None
-        count += 1 
+        count += 1
         if count % 100 == 0:
             index_batch(docs)
             docs = []
             print("Indexed {} documents.".format(count))
-
 if docs:
     index_batch(docs)
     print("Indexed {} documents.".format(count))
