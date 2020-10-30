@@ -11,16 +11,15 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 @cross_origin()
 def find_similar_documents_handler():
     try:
-        title = request.args.get("title")
+        reqBody = request.get_json()
         # Find document for a given title with ElasticSearch
-        #document = compute_similarity.find_document(request.args.get("title"))
+        document = compute_similarity.find_document(reqBody['title'])
         # Retrieve the semantically similar documents for the abstract
-        #documents = compute_similarity.semantic_search(document.abstract)
-
+        documents = compute_similarity.semantic_search(document['abstract'])
         return {"documents": documents}, 200
-
+    except NameError:
+        return "invalid request", 400
     except ValueError:
         return "invalid request", 400
-
     except KeyError:
         return "invalid key in request", 400

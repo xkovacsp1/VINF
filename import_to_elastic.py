@@ -3,7 +3,6 @@ from elasticsearch.helpers import bulk
 import ijson
 INDEX_NAME = 'papers'
 client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
-es = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
 docs = []
 count = 0
 
@@ -91,7 +90,7 @@ def index_batch(docs):
 
 create_index()
 
-with open('res_medium.json', 'rb') as data:
+with open('res_small.json', 'rb') as data:
     for obj in ijson.items(data, 'item'):
         if(obj['pages'] != 'No data'):
             pages = int(obj['pages'])
