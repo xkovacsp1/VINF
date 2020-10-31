@@ -12,10 +12,11 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 def find_similar_documents_handler():
     try:
         reqBody = request.get_json()
-        # Find document for a given title with ElasticSearch
-        document = compute_similarity.find_document(reqBody['title'])
+        # Find vectorized abstract for a given title with ElasticSearch
+        res = compute_similarity.find_document(reqBody['title'])
         # Retrieve the semantically similar documents for the abstract
-        documents = compute_similarity.semantic_search(document['abstract'])
+        documents = compute_similarity.semantic_search(
+            res['abstract_vectorized'], reqBody['number_of_similar_documents'])
         return {"documents": documents}, 200
     except NameError:
         return "invalid request", 400

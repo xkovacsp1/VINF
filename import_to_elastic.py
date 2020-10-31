@@ -22,10 +22,10 @@ def create_index():
                 "enabled": "true"
             },
             "properties": {
-                "abstract": {
-                    "type": "dense_vector", "dims": 512
-                },
                 "title": {
+                    "type": "text"
+                },
+                "abstract": {
                     "type": "text"
                 },
                 "submitter": {
@@ -60,7 +60,10 @@ def create_index():
                 },
                 "list_of_authors": {
                     "type": "text"
-                }
+                },
+                "abstract_vectorized": {
+                    "type": "dense_vector", "dims": 512
+                },
             }
         }
     }
@@ -101,22 +104,23 @@ with open('res_small.json', 'rb') as data:
         else:
             figures = obj['figures']
         categories = eval(obj['categories'])
-        abstract = eval(obj['abstract'])
+        abstract = eval(obj['abstract_vectorized'])
         list_of_authors = eval(obj['list_of_authors'])
         body = {
             "submitter": obj['submitter'],
             "title": obj['title'],
+            "abstract":obj['abstract'],
             "journal_ref": obj['journal_ref'],
             "doi": obj['doi'],
             "report_no": obj['report_no'],
             "categories": categories,
             "license": obj['license'],
-            "abstract": abstract,
             "pages": pages,
             "figures": figures,
             "latest_version_date": obj['latest_version_date'],
             "latest_version": obj['latest_version'],
-            "list_of_authors": list_of_authors
+            "list_of_authors": list_of_authors,
+            "abstract_vectorized": abstract,
         }
         docs.append(body)
         count += 1

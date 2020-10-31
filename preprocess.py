@@ -90,7 +90,7 @@ def get_list_of_authors(authors):
 
 
 with open('papers.json', 'rb') as data:
-    for obj in ijson.items(data, 'item'):
+    for obj in ijson.items(data[:100], 'item'):
         # filter out not accepted papers
         if(bool(re.search('[pP]aper.*[wW]ithdrawn|^[Ww]ithdrawn', obj['abstract']))):
             continue
@@ -115,7 +115,8 @@ with open('papers.json', 'rb') as data:
             "report_no": obj['report-no'],
             "categories": categories,
             "license": obj['license'],
-            "abstract": abstract,
+            "abstract": obj['abstract'],
+            "abstract_vectorized": abstract,
             "update_date": obj['update_date'],
             "pages": pages,
             "figures": figures,
