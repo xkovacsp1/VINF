@@ -1,5 +1,7 @@
 from elasticsearch import Elasticsearch
 import time
+import ijson
+import scipy.spatial.distance
 INDEX_NAME = 'papers'
 #SEARCH_SIZE=5
 client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
@@ -18,9 +20,9 @@ def find_document(title):
     return response["hits"]["hits"][0]["_source"]
 
 
-def semantic_search(abstract_vectorized,search_size):
+def semantic_search(abstract_vectorized,title,search_size):
     script_query = {
-        "size": search_size,
+        "size": search_size+1,# because returns the object, which is later filtered out
         "_source": {"includes": ["title", "categories","abstract"]},
         "query": {
             "script_score": {
@@ -47,5 +49,23 @@ def semantic_search(abstract_vectorized,search_size):
         print(hit["_source"])
         print() """
     # filter out the searched document from result
+    return list(filter(lambda x: x['_source']['title'] != title, response["hits"]["hits"]))
 
-    return response["hits"]["hits"]
+
+def semantic_search_without_elastic(abstract_vectorized, title, search_size):
+    scores=[]
+    with open('res_small.json', 'rb') as data:
+        for obj in ijson.items(data, 'item'):
+            if(obj['title']==title):
+                continue
+            distance = scipy.spatial.distance.cosine(
+                abstract_vectorized, eval(obj['abstract_vectorized']))
+            scores.append(
+                {"title": obj['title'], "categories": obj['categories'], "abstract": obj['abstract'], "distance": 1-distance})
+
+    # sort by score and return the first n results
+    return sorted(scores, key=lambda i: i['distance'], reverse=True)[:search_size]
+    
+
+
+

@@ -16,10 +16,12 @@ def find_similar_documents_handler():
         res = compute_similarity.find_document(reqBody['title'])
         # Retrieve the semantically similar documents for the abstract
         documents = compute_similarity.semantic_search(
-            res['abstract_vectorized'], reqBody['number_of_similar_documents'])
+            res['abstract_vectorized'],res['title'], reqBody['number_of_similar_documents'])
+        #documents = compute_similarity.semantic_search_without_elastic(
+        #res['abstract_vectorized'],res['title'], reqBody['number_of_similar_documents'])
         return {"documents": documents}, 200
     except NameError:
-        return "invalid request", 400
+        return "invalid request", NameError
     except ValueError:
         return "invalid request", 400
     except KeyError:
