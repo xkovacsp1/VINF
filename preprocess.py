@@ -17,11 +17,9 @@ module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
 model = hub.load(module_url)
 print("module %s loaded" % module_url)
 
-
 def remove_stopwords(text):
     no_stopword_text = [w for w in text.split() if not w in stop_words]
     return ' '.join(no_stopword_text)
-
 
 def clean_text(text):
     # remove backslash-apostrophe
@@ -35,10 +33,8 @@ def clean_text(text):
 
     return text
 
-
 def format_sentence_encoder_result_to_array(arr):
     return str(np.array(arr[0]).tolist())
-
 
 def append_to_json(_dict, path):
     with open(path, 'ab+') as f:
@@ -52,14 +48,12 @@ def append_to_json(_dict, path):
             # Write after from [ character
             f.write(json.dumps(_dict).encode()[1:])
 
-
 def get_page_number(str):
     try:
         found = re.search('([0-9]+) +[pP]ages?', str).group(1)
     except AttributeError:
         found = 'No data'
     return found
-
 
 def get_figure_number(str):
     try:
@@ -68,26 +62,21 @@ def get_figure_number(str):
         found = 'No data'
     return found
 
-
 def categories_to_list_of_strings(categories):
     return str(categories.split(' '))
-
 
 def get_version_date(versions):
     versions = eval(versions)
     return str(versions[-1]['created'])
 
-
 def get_version_number(versions):
     versions = eval(versions)
     return str(versions[-1]['version'])
-
 
 def get_list_of_authors(authors):
     authors = eval(authors)
     res = list(map(' '.join, authors))
     return str(list(map(str.strip, res)))
-
 
 with open('papers.json', 'rb') as data:
     for obj in ijson.items(data, 'item'):
@@ -125,8 +114,8 @@ with open('papers.json', 'rb') as data:
             "list_of_authors": list_of_authors
         }
         docs.append(body)
-        if count+1 == 1000001:
-          break
+        #if count+1 == 1000001:
+          #break
         count += 1
         if count % 10000 == 0:
             append_to_json(docs, 'res_1m.json')

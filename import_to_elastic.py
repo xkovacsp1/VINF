@@ -2,10 +2,10 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 import ijson
 INDEX_NAME = 'papers'
-client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
+client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}],
+                       timeout=30, max_retries=10, retry_on_timeout=True)
 docs = []
 count = 0
-
 
 def create_index():
     """ Creates an Elasticsearch index."""
@@ -80,7 +80,6 @@ def create_index():
         return is_created
     return is_created
 
-
 def index_batch(docs):
     requests = []
     for i, doc in enumerate(docs):
@@ -89,7 +88,6 @@ def index_batch(docs):
         request["_index"] = INDEX_NAME
         requests.append(request)
     bulk(client, requests)
-
 
 create_index()
 

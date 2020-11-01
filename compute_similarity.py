@@ -19,7 +19,6 @@ def find_document(title):
     # return match object with biggest score
     return response["hits"]["hits"][0]["_source"]
 
-
 def semantic_search(abstract_vectorized,title,search_size):
     script_query = {
         "size": search_size+1,# because returns the object, which is later filtered out
