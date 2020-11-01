@@ -22,7 +22,7 @@ def find_similar_documents_handler():
         return {"searched_document":{'title':res['title'],
                                      'abstract': res['abstract'], 'categories': res['categories']}, "similar_documents": documents}, 200
     except NameError:
-        return "invalid request", NameError
+        return "invalid request", 400
     except ValueError:
         return "invalid request", 400
     except KeyError:
