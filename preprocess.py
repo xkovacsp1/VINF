@@ -90,7 +90,7 @@ def get_list_of_authors(authors):
 
 
 with open('papers.json', 'rb') as data:
-    for obj in ijson.items(data[:100], 'item'):
+    for obj in ijson.items(data, 'item'):
         # filter out not accepted papers
         if(bool(re.search('[pP]aper.*[wW]ithdrawn|^[Ww]ithdrawn', obj['abstract']))):
             continue
@@ -125,13 +125,15 @@ with open('papers.json', 'rb') as data:
             "list_of_authors": list_of_authors
         }
         docs.append(body)
+        if count+1 == 1000001:
+          break
         count += 1
-        if count % 100 == 0:
-            append_to_json(docs, 'res.json')
+        if count % 10000 == 0:
+            append_to_json(docs, 'res_1m.json')
             docs = []
             print("saved {} documents.".format(count))
 
 if docs:
-    append_to_json(docs, 'res.json')
+    append_to_json(docs, 'res_1m.json')
     docs = []
     print("saved {} documents.".format(count))

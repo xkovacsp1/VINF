@@ -3,19 +3,19 @@ import time
 import ijson
 import scipy.spatial.distance
 INDEX_NAME = 'papers'
-#SEARCH_SIZE=5
-client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}])
+client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}],timeout=30, max_retries=10, retry_on_timeout=True)
 
 def find_document(title):
     script_query = {
-        "_source": {"includes": ["abstract_vectorized","title"]},
+        "_source": {"includes": ["abstract_vectorized", "title", "categories", "abstract"]},
         'query': {
             'match': {
                 'title': title,
             }
         }
     }
-    response=client.search(index=INDEX_NAME, body=script_query)
+    response = client.search(
+        index=INDEX_NAME, body=script_query)
     # return match object with biggest score
     return response["hits"]["hits"][0]["_source"]
 
@@ -44,17 +44,13 @@ def semantic_search(abstract_vectorized,title,search_size):
     print()
     print("{} total hits.".format(response["hits"]["total"]["value"]))
     print("search time: {:.2f} ms".format(search_time * 1000))
-    """  for hit in response["hits"]["hits"]:
-        print("id: {}, score: {}".format(hit["_id"], hit["_score"]))
-        print(hit["_source"])
-        print() """
     # filter out the searched document from result
     return list(filter(lambda x: x['_source']['title'] != title, response["hits"]["hits"]))
 
-
 def semantic_search_without_elastic(abstract_vectorized, title, search_size):
     scores=[]
-    with open('res_small.json', 'rb') as data:
+    count=0
+    with open('res_1m.json', 'rb') as data:
         for obj in ijson.items(data, 'item'):
             if(obj['title']==title):
                 continue
@@ -62,6 +58,9 @@ def semantic_search_without_elastic(abstract_vectorized, title, search_size):
                 abstract_vectorized, eval(obj['abstract_vectorized']))
             scores.append(
                 {"title": obj['title'], "categories": obj['categories'], "abstract": obj['abstract'], "distance": 1-distance})
+            count += 1
+            #if count % 10000 == 0:
+                #print("scanned {} documents.".format(count))
 
     # sort by score and return the first n results
     return sorted(scores, key=lambda i: i['distance'], reverse=True)[:search_size]

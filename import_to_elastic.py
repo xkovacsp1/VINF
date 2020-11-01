@@ -93,7 +93,7 @@ def index_batch(docs):
 
 create_index()
 
-with open('res_small.json', 'rb') as data:
+with open('res_1m.json', 'rb') as data:
     for obj in ijson.items(data, 'item'):
         if(obj['pages'] != 'No data'):
             pages = int(obj['pages'])
@@ -124,7 +124,7 @@ with open('res_small.json', 'rb') as data:
         }
         docs.append(body)
         count += 1
-        if count % 100 == 0:
+        if count % 10000 == 0:
             index_batch(docs)
             docs = []
             print("Indexed {} documents.".format(count))
