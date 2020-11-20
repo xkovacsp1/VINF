@@ -91,7 +91,7 @@ def index_batch(docs):
 
 create_index()
 
-with open('res_1m.json', 'rb') as data:
+with open('train_medium.json', 'rb') as data:
     for obj in ijson.items(data, 'item'):
         if(obj['pages'] != 'No data'):
             pages = int(obj['pages'])
