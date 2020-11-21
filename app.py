@@ -15,10 +15,12 @@ def find_similar_documents_handler():
         # Find vectorized abstract for a given title with ElasticSearch
         res = compute_similarity.find_document(reqBody['title'])
         # Retrieve the semantically similar documents for the abstract
-        documents = compute_similarity.semantic_search(
+        documents = compute_similarity.semantic_search_universal_sentence_encoder(
             res['abstract_vectorized'],res['title'], reqBody['number_of_similar_documents'])
         #documents = compute_similarity.semantic_search_without_elastic(
         #res['abstract_vectorized'],res['title'], reqBody['number_of_similar_documents'])
+        #documents = compute_similarity.semantic_search_TFIDF(
+        #res['abstract'],res['title'], reqBody['number_of_similar_documents'])
         return {"searched_document":{'title':res['title'],
                                      'abstract': res['abstract'], 'categories': res['categories']}, "similar_documents": documents}, 200
     except NameError:

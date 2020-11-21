@@ -19,7 +19,7 @@ def find_document(title):
     # return match object with biggest score
     return response["hits"]["hits"][0]["_source"]
 
-def semantic_search(abstract_vectorized,title,search_size):
+def semantic_search_universal_sentence_encoder(abstract_vectorized,title,search_size):
     script_query = {
         "size": search_size+1,# because returns the object, which is later filtered out
         "_source": {"includes": ["title", "categories","abstract"]},
@@ -40,9 +40,9 @@ def semantic_search(abstract_vectorized,title,search_size):
         index=INDEX_NAME,
         body=script_query)
     search_time = time.time() - search_start
-    print()
-    print("{} total hits.".format(response["hits"]["total"]["value"]))
-    print("search time: {:.2f} ms".format(search_time * 1000))
+    #print()
+    #print("{} total hits.".format(response["hits"]["total"]["value"]))
+    #print("search time: {:.2f} ms".format(search_time * 1000))
     # filter out the searched document from result
     return list(filter(lambda x: x['_source']['title'] != title, response["hits"]["hits"]))
 
@@ -63,7 +63,28 @@ def semantic_search_without_elastic(abstract_vectorized, title, search_size):
 
     # sort by score and return the first n results
     return sorted(scores, key=lambda i: i['distance'], reverse=True)[:search_size]
-    
 
-
-
+def semantic_search_TFIDF(abstract, title, search_size):
+    script_query = {
+        "size": search_size+1,  # because returns the object, which is later filtered out
+        "_source": {"includes": ["title", "categories", "abstract"]},
+        "query": {
+            "more_like_this": {
+                "fields": ["abstract"],
+                "like": abstract,
+                "min_term_freq": 3,
+                "max_query_terms": 50,
+                "min_doc_freq": 4
+            }
+        }
+    }
+    search_start = time.time()
+    response = client.search(
+        index=INDEX_NAME,
+        body=script_query)
+    search_time = time.time() - search_start
+    #print()
+    #print("{} total hits.".format(response["hits"]["total"]["value"]))
+    #print("search time: {:.2f} ms".format(search_time * 1000))
+    # filter out the searched document from result
+    return list(filter(lambda x: x['_source']['title'] != title, response["hits"]["hits"]))
