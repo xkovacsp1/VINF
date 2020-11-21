@@ -29,27 +29,41 @@ def append_to_json(_dict, path):
             f.write(json.dumps(_dict).encode()[1:])
 
 
-with open('test_medium.json', 'rb') as data:
+with open('test_100k.json', 'rb') as data:
     for obj in ijson.items(data, 'item'):
         obj_categories = eval(obj['categories'])
+        obj['id'] = str(obj['id'])
         arr = eval(obj['abstract_vectorized'])
-        res_universal_sentence_encoder = compute_similarity.semantic_search_universal_sentence_encoder(
-            arr, obj['title'],0)
-        res_categories_universal_sentence_encoder = res_universal_sentence_encoder[0]['_source']['categories']
-        res_TFIDF = compute_similarity.semantic_search_TFIDF(
-            obj['abstract'], obj['title'], 0)
-        #accuracy_res = accuracy(
-            #set(obj_categories),  set(res_categories))
 
         # google universal sentence encoder
-        precision_res_universal_sentence_encoder = precision(
+        res_universal_sentence_encoder = compute_similarity.semantic_search_universal_sentence_encoder(
+            arr, obj['title'],0)
+        if len(res_universal_sentence_encoder) > 0:
+            res_categories_universal_sentence_encoder = res_universal_sentence_encoder[0]['_source']['categories']
+            precision_res_universal_sentence_encoder = precision(
                 set(obj_categories), set(res_categories_universal_sentence_encoder))
-        recall_res_universal_sentence_encoder = recall(
+            recall_res_universal_sentence_encoder = recall(
             set(obj_categories), set(res_categories_universal_sentence_encoder))
-        precision_sum_universal_sentence_encoder+=precision_res_universal_sentence_encoder
-        recall_sum_universal_sentence_encoder+=recall_res_universal_sentence_encoder
-
+            precision_sum_universal_sentence_encoder+=precision_res_universal_sentence_encoder
+            recall_sum_universal_sentence_encoder+=recall_res_universal_sentence_encoder
+            obj['most_similar_title_universal_sentence_encoder'] = res_universal_sentence_encoder[0]['_source']['title']
+            obj['most_similar_categories_universal_sentence_encoder'] = res_categories_universal_sentence_encoder
+            obj['precision_universal_sentence_encoder'] = str(
+                precision_res_universal_sentence_encoder)
+            obj['recall_universal_sentence_encoder'] = str(
+                recall_res_universal_sentence_encoder)
+            obj['score_universal_sentence_encoder'] = str(
+                res_universal_sentence_encoder[0]['_score'])
+        else:
+            obj['precision_universal_sentence_encoder'] = str(0)
+            obj['recall_universal_sentence_encoder'] = str(0)
+            obj['score_universal_sentence_encoder'] = str(0)
+            obj['most_similar_title_universal_sentence_encoder'] = ''
+            obj['most_similar_categories_universal_sentence_encoder'] = ''
+          
         # TFIDF
+        res_TFIDF = compute_similarity.semantic_search_TFIDF(
+            obj['abstract'], obj['title'], 0)
         if len(res_TFIDF) > 0:
             res_categories_TFIDF = res_TFIDF[0]['_source']['categories']
             precision_res_TFIDF = precision(
@@ -73,28 +87,16 @@ with open('test_medium.json', 'rb') as data:
             obj['score_TFIDF'] = str(0)
             obj['most_similar_title_TFIDF'] = ''
             obj['most_similar_categories_TFIDF'] = ''
-
         
-        #obj['accuracy']=accuracy_res
-        obj['most_similar_title_universal_sentence_encoder'] = res_universal_sentence_encoder[0]['_source']['title']
-        obj['most_similar_categories_universal_sentence_encoder'] = res_categories_universal_sentence_encoder
-        obj['id']=str(obj['id'])
-        obj['precision_universal_sentence_encoder'] = str(
-            precision_res_universal_sentence_encoder)
-        obj['recall_universal_sentence_encoder'] = str(
-            recall_res_universal_sentence_encoder)
-        obj['score_universal_sentence_encoder'] = str(
-            res_universal_sentence_encoder[0]['_score'])
-
         docs.append(obj)
         count += 1
-        if count % 10000 == 0:
-            append_to_json(docs, 'evaluate_medium.json')
+        if count % 100 == 0:
+            append_to_json(docs, 'evaluate_100k.json')
             docs = []
             print("Evaluated {} documents.".format(count))
   
 if docs:
-    append_to_json(docs, 'evaluate_medium.json')
+    append_to_json(docs, 'evaluate_100k.json')
     docs = []
     print("evaluated {} documents.".format(count))
 
