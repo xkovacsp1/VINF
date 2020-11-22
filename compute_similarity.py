@@ -17,7 +17,10 @@ def find_document(title):
     response = client.search(
         index=INDEX_NAME, body=script_query)
     # return match object with biggest score
-    return response["hits"]["hits"][0]["_source"]
+    if response["hits"]["hits"][0]["_source"]:
+        return response["hits"]["hits"][0]["_source"]
+    else:
+        return LookupError
 
 def semantic_search_universal_sentence_encoder(abstract_vectorized,title,search_size):
     script_query = {
