@@ -29,7 +29,7 @@ def append_to_json(_dict, path):
             f.write(json.dumps(_dict).encode()[1:])
 
 
-with open('test_100k.json', 'rb') as data:
+with open('test_medium.json', 'rb') as data:
     for obj in ijson.items(data, 'item'):
         obj_categories = eval(obj['categories'])
         obj['id'] = str(obj['id'])
@@ -47,6 +47,7 @@ with open('test_100k.json', 'rb') as data:
             precision_sum_universal_sentence_encoder+=precision_res_universal_sentence_encoder
             recall_sum_universal_sentence_encoder+=recall_res_universal_sentence_encoder
             obj['most_similar_title_universal_sentence_encoder'] = res_universal_sentence_encoder[0]['_source']['title']
+            obj['most_similar_abstract_universal_sentence_encoder'] = res_universal_sentence_encoder[0]['_source']['abstract']
             obj['most_similar_categories_universal_sentence_encoder'] = res_categories_universal_sentence_encoder
             obj['precision_universal_sentence_encoder'] = str(
                 precision_res_universal_sentence_encoder)
@@ -60,6 +61,7 @@ with open('test_100k.json', 'rb') as data:
             obj['score_universal_sentence_encoder'] = str(0)
             obj['most_similar_title_universal_sentence_encoder'] = ''
             obj['most_similar_categories_universal_sentence_encoder'] = ''
+            obj['most_similar_abstract_universal_sentence_encoder'] = ''
           
         # TFIDF
         res_TFIDF = compute_similarity.semantic_search_TFIDF(
@@ -80,23 +82,25 @@ with open('test_100k.json', 'rb') as data:
             res_TFIDF[0]['_score'])
             obj['most_similar_title_TFIDF'] = res_TFIDF[0]['_source']['title']
             obj['most_similar_categories_TFIDF'] = res_categories_TFIDF
-        # more like this does not retrun result
+            obj['most_similar_abstract_TFIDF'] = res_TFIDF[0]['_source']['abstract']
+       
         else:
             obj['precision_TFIDF'] = str(0)
             obj['recall_TFIDF'] = str(0)
             obj['score_TFIDF'] = str(0)
             obj['most_similar_title_TFIDF'] = ''
             obj['most_similar_categories_TFIDF'] = ''
+            obj['most_similar_abstract_TFIDF'] = ''
         
         docs.append(obj)
         count += 1
         if count % 100 == 0:
-            append_to_json(docs, 'evaluate_100k.json')
+            append_to_json(docs, 'evaluate_medium.json')
             docs = []
             print("Evaluated {} documents.".format(count))
   
 if docs:
-    append_to_json(docs, 'evaluate_100k.json')
+    append_to_json(docs, 'evaluate_medium.json')
     docs = []
     print("evaluated {} documents.".format(count))
 
