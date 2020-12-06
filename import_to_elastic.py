@@ -1,11 +1,11 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 import ijson
+import argparse
 INDEX_NAME = 'papers'
 client = Elasticsearch([{'host': '192.168.99.100', 'port': 9200}],
                        timeout=30, max_retries=10, retry_on_timeout=True)
-docs = []
-count = 0
+
 
 def create_index():
     """ Creates an Elasticsearch index."""
@@ -80,6 +80,7 @@ def create_index():
         return is_created
     return is_created
 
+
 def index_batch(docs):
     requests = []
     for i, doc in enumerate(docs):
@@ -89,46 +90,60 @@ def index_batch(docs):
         requests.append(request)
     bulk(client, requests)
 
-create_index()
 
-with open('train_medium.json', 'rb') as data:
-    for obj in ijson.items(data, 'item'):
-        if(obj['pages'] != 'No data'):
-            pages = int(obj['pages'])
-        else:
-            pages = obj['pages']
-        if(obj['figures'] != 'No data'):
-            figures = int(obj['figures'])
-        else:
-            figures = obj['figures']
-        categories = eval(obj['categories'])
-        abstract = eval(obj['abstract_vectorized'])
-        list_of_authors = eval(obj['list_of_authors'])
-        body = {
-            "submitter": obj['submitter'],
-            "title": obj['title'],
-            "abstract":obj['abstract'],
-            "journal_ref": obj['journal_ref'],
-            "doi": obj['doi'],
-            "report_no": obj['report_no'],
-            "categories": categories,
-            "license": obj['license'],
-            "pages": pages,
-            "figures": figures,
-            "latest_version_date": obj['latest_version_date'],
-            "latest_version": obj['latest_version'],
-            "list_of_authors": list_of_authors,
-            "abstract_vectorized": abstract,
-        }
-        docs.append(body)
-        count += 1
-        if count % 10000 == 0:
-            index_batch(docs)
-            docs = []
-            print("Indexed {} documents.".format(count))
-if docs:
-    index_batch(docs)
-    print("Indexed {} documents.".format(count))
+def main():
+    docs = []
+    count = 0
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        "-f", "--file", help="select file to import to elastic")
+    args = parser.parse_args()
+    if args.file is None:
+        print('ERROR: input file is not defined')
+        return
+    create_index()
+    with open(args.file, 'rb') as data:
+        for obj in ijson.items(data, 'item'):
+            if(obj['pages'] != 'No data'):
+                pages = int(obj['pages'])
+            else:
+                pages = obj['pages']
+            if(obj['figures'] != 'No data'):
+                figures = int(obj['figures'])
+            else:
+                figures = obj['figures']
+            categories = eval(obj['categories'])
+            abstract = eval(obj['abstract_vectorized'])
+            list_of_authors = eval(obj['list_of_authors'])
+            body = {
+                "submitter": obj['submitter'],
+                "title": obj['title'],
+                "abstract": obj['abstract'],
+                "journal_ref": obj['journal_ref'],
+                "doi": obj['doi'],
+                "report_no": obj['report_no'],
+                "categories": categories,
+                "license": obj['license'],
+                "pages": pages,
+                "figures": figures,
+                "latest_version_date": obj['latest_version_date'],
+                "latest_version": obj['latest_version'],
+                "list_of_authors": list_of_authors,
+                "abstract_vectorized": abstract,
+            }
+            docs.append(body)
+            count += 1
+            if count % 10000 == 0:
+                index_batch(docs)
+                docs = []
+                print("Indexed {} documents.".format(count))
+    if docs:
+        index_batch(docs)
+        print("Indexed {} documents.".format(count))
 
-client.indices.refresh(index=INDEX_NAME)
-print("Done indexing.")
+    client.indices.refresh(index=INDEX_NAME)
+    print("Done indexing.")
+
+
+main()
