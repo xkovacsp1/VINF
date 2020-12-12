@@ -16,15 +16,10 @@ def remove_stopwords(text, stop_words):
 
 
 def clean_text(text):
-    # remove backslash-apostrophe
     text = re.sub("\'", "", text)
-    # remove everything except alphabets and numbers
     text = re.sub("[^a-zA-Z0-9]", " ", text)
-    # remove whitespaces
     text = ' '.join(text.split())
-    # convert text to lowercase
     text = text.lower()
-
     return text
 
 
@@ -34,14 +29,13 @@ def format_sentence_encoder_result_to_array(arr):
 
 def append_to_json(_dict, path):
     with open(path, 'ab+') as f:
-        f.seek(0, 2)  # Go to the end of file
-        if f.tell() == 0:  # Check if file is empty
-            f.write(json.dumps(_dict).encode())  # If empty, write an array
+        f.seek(0, 2)  
+        if f.tell() == 0:  
+            f.write(json.dumps(_dict).encode())  
         else:
             pos = f.seek(-1, 2)
-            f.truncate()  # Remove the last character, open the array
-            f.write(' , '.encode())  # Write the separator
-            # Write after from [ character
+            f.truncate()  
+            f.write(' , '.encode())  
             f.write(json.dumps(_dict).encode()[1:])
 
 

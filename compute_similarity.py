@@ -43,29 +43,7 @@ def semantic_search_universal_sentence_encoder(abstract_vectorized,title,search_
         index=INDEX_NAME,
         body=script_query)
     search_time = time.time() - search_start
-    #print()
-    #print("{} total hits.".format(response["hits"]["total"]["value"]))
-    #print("search time: {:.2f} ms".format(search_time * 1000))
-    # filter out the searched document from result
     return list(filter(lambda x: x['_source']['title'] != title, response["hits"]["hits"]))
-
-def semantic_search_without_elastic(abstract_vectorized, title, search_size):
-    scores=[]
-    count=0
-    with open('res_1m.json', 'rb') as data:
-        for obj in ijson.items(data, 'item'):
-            if(obj['title']==title):
-                continue
-            distance = scipy.spatial.distance.cosine(
-                abstract_vectorized, eval(obj['abstract_vectorized']))
-            scores.append(
-                {"title": obj['title'], "categories": obj['categories'], "abstract": obj['abstract'], "distance": 1-distance})
-            count += 1
-            #if count % 10000 == 0:
-                #print("scanned {} documents.".format(count))
-
-    # sort by score and return the first n results
-    return sorted(scores, key=lambda i: i['distance'], reverse=True)[:search_size]
 
 def semantic_search_TFIDF(abstract, title, search_size):
     script_query = {
@@ -86,8 +64,4 @@ def semantic_search_TFIDF(abstract, title, search_size):
         index=INDEX_NAME,
         body=script_query)
     search_time = time.time() - search_start
-    #print()
-    #print("{} total hits.".format(response["hits"]["total"]["value"]))
-    #print("search time: {:.2f} ms".format(search_time * 1000))
-    # filter out the searched document from result
     return list(filter(lambda x: x['_source']['title'] != title, response["hits"]["hits"]))
